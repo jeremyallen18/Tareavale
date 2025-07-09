@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Casa con árboles y gallos</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+      background: #87CEEB; /* cielo de fondo */
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas" width="800" height="600"></canvas>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    let animationStep = 0;
+    const totalSteps = 14; // Aumenté los pasos para incluir los gallos
+    let lastTimestamp = 0;
+    const animationSpeed = 1000; // 1 segundo entre pasos
+    const restartDelay = 3000; // 3 segundos de espera antes de reiniciar
+    let restartTimer = null;
+    const grassHeight = 100; // Altura del pasto
+
+    function animate(timestamp) {
+      if (!lastTimestamp || timestamp - lastTimestamp > animationSpeed) {
+        lastTimestamp = timestamp;
+        
+        if (animationStep === totalSteps) {
+          if (!restartTimer) {
+            restartTimer = setTimeout(() => {
+              animationStep = 0;
+              restartTimer = null;
+            }, restartDelay);
+          }
+        } else {
+          animationStep = (animationStep + 1) % (totalSteps + 1);
+        }
+        
+        drawScene();
+      }
+      requestAnimationFrame(animate);
+    }
+
+    //NUBE
+    function drawCloud(x, y, timeOffset = 0) {
+  const time = Date.now() / 1000 + timeOffset;
+  const drift = (time * 20) % (canvas.width + 100) - 100;
+
+  ctx.fillStyle = '#FFFFFF';
+  ctx.beginPath();
+  ctx.arc(drift + x, y, 20, 0, Math.PI * 2);
+  ctx.arc(drift + x + 25, y - 10, 25, 0, Math.PI * 2);
+  ctx.arc(drift + x + 50, y, 20, 0, Math.PI * 2);
+  ctx.closePath();
+  ctx.fill();
+}
+
+
+    function drawScene() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      drawBackground();
+      drawSun();
+      
+      // Elementos de la escena
+      if (animationStep >= 1) drawHouseBase();
+      if (animationStep >= 2) drawRoof();
+      if (animationStep >= 3) drawDoor();
+      if (animationStep >= 4) drawDoorKnob();
+      if (animationStep >= 5) drawLeftWindow();
+      if (animationStep >= 6) drawRightWindow();
+      if (animationStep >= 7) drawChimney();
+      if (animationStep >= 8) drawTree(100, canvas.height - grassHeight);
+      if (animationStep >= 9) drawTree(180, canvas.height - grassHeight);
+      if (animationStep >= 10) drawTree(600, canvas.height - grassHeight);
+      if (animationStep >= 11) drawTree(680, canvas.height - grassHeight);
+      if (animationStep >= 12) drawRooster(250, canvas.height - grassHeight - 20);
+      if (animationStep >= 13) drawRooster(550, canvas.height - grassHeight - 20);
+      
+      drawInstructions();
+    }
+
+    function drawSun() {
+      drawCloud(50, 100, 0);
+      drawCloud(300, 80, 2);
+
+      const time = Date.now() / 1000;
+      const pulse = Math.sin(time * 2) * 5 + 40;
+      
+      const gradient = ctx.createRadialGradient(700, 100, 10, 700, 100, pulse);
+      gradient.addColorStop(0, '#FFFF00');
+      gradient.addColorStop(0.7, '#FFD700');
+      gradient.addColorStop(1, 'rgba(255,215,0,0)');
+      
+      ctx.beginPath();
+      ctx.arc(700, 100, pulse, 0, Math.PI * 2);
+      ctx.fillStyle = gradient;
+      ctx.fill();
+      
+      ctx.save();
+      ctx.translate(700, 100);
+      ctx.rotate(time % (Math.PI * 2));
+      
+      for (let i = 0; i < 12; i++) {
+        ctx.rotate(Math.PI / 6);
+        ctx.beginPath();
+        ctx.moveTo(pulse - 5, 0);
+        ctx.lineTo(pulse + 15, 0);
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = '#FFD700';
+        ctx.stroke();
+      }
+      
+      ctx.restore();
+    }
+    
+
+    function drawRooster(x, y) {
+      const time = Date.now() / 500;
+      const headBob = Math.sin(time * 3) * 3;
+      
+      // Cuerpo
+      ctx.fillStyle = '#FF0000';
+      ctx.beginPath();
+      ctx.ellipse(x, y - headBob, 20, 15, 0, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Cabeza
+      ctx.fillStyle = '#FF4500';
+      ctx.beginPath();
+      ctx.arc(x + 20, y - 20 - headBob, 10, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Cresta
+      ctx.fillStyle = '#FF0000';
+      ctx.beginPath();
+      ctx.moveTo(x + 20, y - 30 - headBob);
+      ctx.lineTo(x + 30, y - 40 - headBob);
+      ctx.lineTo(x + 20, y - 35 - headBob);
+      ctx.lineTo(x + 10, y - 40 - headBob);
+      ctx.closePath();
+      ctx.fill();
+      
+      // Pico
+      ctx.fillStyle = '#FFD700';
+      ctx.beginPath();
+      ctx.moveTo(x + 30, y - 20 - headBob);
+      ctx.lineTo(x + 40, y - 20 - headBob);
+      ctx.lineTo(x + 35, y - 15 - headBob);
+      ctx.closePath();
+      ctx.fill();
+      
+      // Ojo
+      ctx.fillStyle = '#000';
+      ctx.beginPath();
+      ctx.arc(x + 23, y - 22 - headBob, 2, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Patas
+      ctx.strokeStyle = '#FFA500';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(x - 5, y + 5);
+      ctx.lineTo(x - 5, y + 20);
+      ctx.moveTo(x + 5, y + 5);
+      ctx.lineTo(x + 5, y + 20);
+      ctx.stroke();
+      
+      // Cola (se mueve con el tiempo)
+      const tailAngle = Math.sin(time * 2) * 0.3;
+      ctx.save();
+      ctx.translate(x - 25, y - 10);
+      ctx.rotate(tailAngle);
+      
+      ctx.fillStyle = '#FF0000';
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.bezierCurveTo(-30, -20, -40, -30, -50, -10);
+      ctx.bezierCurveTo(-40, 10, -30, 0, 0, 0);
+      ctx.fill();
+      
+      ctx.restore();
+      
+      // Texto "Kikirikí" que aparece y desaparece
+      if (Math.sin(time) > 0.8) {
+        ctx.fillStyle = '#000';
+        ctx.font = 'bold 14px Arial';
+        ctx.fillText('¡Kikirikí!', x + 45, y - 30 - headBob);
+      }
+    }
+
+    function drawInstructions() {
+      ctx.fillStyle = '#000';
+      ctx.font = '16px Arial';
+      ctx.fillText(`Paso ${animationStep} de ${totalSteps}`, 20, 30);
+      
+      if (animationStep === 0) {
+        ctx.fillText('Presiona cualquier tecla para comenzar', 20, 60);
+      } else if (animationStep === totalSteps) {
+        ctx.fillText('Esperando para reiniciar...', 20, 60);
+      }
+    }
+
+    function drawBackground() {
+      const skyGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      skyGradient.addColorStop(0, '#87CEEB');
+      skyGradient.addColorStop(1, '#4682B4');
+      ctx.fillStyle = skyGradient;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Césped más detallado
+      ctx.fillStyle = '#32CD32';
+      ctx.fillRect(0, canvas.height - grassHeight, canvas.width, grassHeight);
+      
+      // Hierbas en primer plano
+      ctx.strokeStyle = '#228B22';
+      ctx.lineWidth = 2;
+      for (let i = 0; i < 50; i++) {
+        const x = Math.random() * canvas.width;
+        const height = 10 + Math.random() * 20;
+        ctx.beginPath();
+        ctx.moveTo(x, canvas.height - grassHeight);
+        ctx.quadraticCurveTo(
+          x + 5 - Math.random() * 10, 
+          canvas.height - grassHeight - height, 
+          x, 
+          canvas.height - grassHeight - height
+        );
+        ctx.stroke();
+      }
+    }
+
+    function drawHouseBase() {
+      const houseHeight = 150;
+      const progress = Math.min(1, animationStep / 1);
+      const height = houseHeight * progress;
+      
+      ctx.fillStyle = '#FFD700';
+      ctx.fillRect(300, canvas.height - grassHeight - height, 200, height);
+    }
+
+    function drawRoof() {
+  const progress = Math.min(1, (animationStep - 1) / 1);
+  const baseY = canvas.height - grassHeight - 150; // Parte superior de la casa
+  const leftX = 300;
+  const rightX = 500;
+  const peakY = baseY - 50; // Altura del pico del techo
+
+  ctx.beginPath();
+  ctx.moveTo(leftX, baseY);
+  ctx.lineTo(rightX, baseY);
+
+  if (progress < 0.5) {
+    const x = leftX + (rightX - leftX) * (progress / 0.5);
+    ctx.lineTo(x, baseY);
+  } else {
+    ctx.lineTo(rightX, baseY);
+    const y = baseY - (baseY - peakY) * ((progress - 0.5) / 0.5);
+    ctx.lineTo((leftX + rightX) / 2, y);
+  }
+
+  ctx.closePath();
+  ctx.fillStyle = '#B22222';
+  ctx.fill();
+  ctx.strokeStyle = '#8B0000';
+  ctx.stroke();
+}
+
+    function drawDoor() {
+      const progress = Math.min(1, (animationStep - 2) / 1);
+      const height = 70 * progress;
+      const baseY = canvas.height - grassHeight;
+      
+      ctx.fillStyle = '#8B4513';
+      ctx.fillRect(370, baseY - height, 40, height);
+    }
+
+    function drawDoorKnob() {
+      const baseY = canvas.height - grassHeight;
+      ctx.beginPath();
+      ctx.arc(405, baseY - 35, 3, 0, Math.PI * 2);
+      ctx.fillStyle = '#DAA520';
+      ctx.fill();
+    }
+
+    function drawLeftWindow() {
+      const progress = Math.min(1, (animationStep - 4) / 1);
+      const baseY = canvas.height - grassHeight;
+      
+      ctx.fillStyle = '#ADD8E6';
+      ctx.fillRect(320, baseY - 100, 30 * progress, 30 * progress);
+      
+      if (progress === 1) {
+        ctx.strokeStyle = '#000';
+        ctx.strokeRect(320, baseY - 100, 30, 30);
+        ctx.beginPath();
+        ctx.moveTo(320 + 15, baseY - 100);
+        ctx.lineTo(320 + 15, baseY - 70);
+        ctx.moveTo(320, baseY - 85);
+        ctx.lineTo(320 + 30, baseY - 85);
+        ctx.stroke();
+      }
+    }
+
+    function drawRightWindow() {
+      const progress = Math.min(1, (animationStep - 5) / 1);
+      const baseY = canvas.height - grassHeight;
+      
+      ctx.fillStyle = '#ADD8E6';
+      ctx.fillRect(450, baseY - 100, 30 * progress, 30 * progress);
+      
+      if (progress === 1) {
+        ctx.strokeStyle = '#000';
+        ctx.strokeRect(450, baseY - 100, 30, 30);
+        ctx.beginPath();
+        ctx.moveTo(450 + 15, baseY - 100);
+        ctx.lineTo(450 + 15, baseY - 70);
+        ctx.moveTo(450, baseY - 85);
+        ctx.lineTo(450 + 30, baseY - 85);
+        ctx.stroke();
+      }
+    }
+
+    function drawChimney() {
+  const progress = Math.min(1, (animationStep - 6) / 1);
+  const height = 50 * progress;
+  const roofBaseY = canvas.height - grassHeight - 150; // Parte superior de la casa
+  const chimneyBaseY = roofBaseY - 50; // Parte superior del techo
+
+  ctx.fillStyle = '#8B0000';
+  ctx.fillRect(440, chimneyBaseY + (50 - height), 20, height);
+
+  if (progress === 1) {
+    ctx.strokeStyle = '#A52A2A';
+    for (let i = chimneyBaseY + 5; i < chimneyBaseY + 50; i += 7) {
+      ctx.beginPath();
+      ctx.moveTo(440, i);
+      ctx.lineTo(460, i);
+      ctx.stroke();
+    }
+  }
+}
+
+
+    function drawTree(x, baseY) {
+      const trunkHeight = 80;
+      const trunkWidth = 25;
+      const leavesRadius = 40;
+      
+      let progress = 1;
+      if (x === 100 && animationStep === 8) progress = Math.min(1, (animationStep - 7) / 1);
+      if (x === 180 && animationStep === 9) progress = Math.min(1, (animationStep - 8) / 1);
+      if (x === 600 && animationStep === 10) progress = Math.min(1, (animationStep - 9) / 1);
+      if (x === 680 && animationStep === 11) progress = Math.min(1, (animationStep - 10) / 1);
+
+      // Tronco
+      const trunkH = trunkHeight * progress;
+      ctx.fillStyle = '#8B4513';
+      ctx.fillRect(x, baseY - trunkH, trunkWidth, trunkH);
+
+      // Copa
+      if (progress > 0.5) {
+        const colors = ['#2E8B57', '#3CB371', '#228B22'];
+        const offsets = [
+          [0, -leavesRadius * 0.6, leavesRadius * 0.9],
+          [-leavesRadius * 0.5, -leavesRadius * 0.4, leavesRadius * 0.7],
+          [leavesRadius * 0.5, -leavesRadius * 0.4, leavesRadius * 0.7],
+        ];
+
+        const copaProgress = (progress - 0.5) / 0.5;
+        
+        offsets.forEach(([dx, dy, r], i) => {
+          ctx.beginPath();
+          ctx.arc(x + dx + trunkWidth / 2, baseY - trunkHeight + dy, r * copaProgress, 0, Math.PI * 2);
+          ctx.fillStyle = colors[i % colors.length];
+          ctx.fill();
+        });
+
+        // Sombra
+        if (progress === 1) {
+          ctx.beginPath();
+          ctx.ellipse(x + trunkWidth / 2, baseY + 5, 35, 10, 0, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(0,0,0,0.2)';
+          ctx.fill();
+        }
+      }
+    }
+
+    document.addEventListener('keydown', () => {
+      if (animationStep === 0) {
+        animationStep = 1;
+        if (restartTimer) {
+          clearTimeout(restartTimer);
+          restartTimer = null;
+        }
+      }
+    });
+
+    requestAnimationFrame(animate);
+  </script>
+</body>
+</html>
